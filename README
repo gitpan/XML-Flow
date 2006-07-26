@@ -1,4 +1,4 @@
-XML-Flow version 0.80
+XML-Flow version 0.81
 =====================
 
 XML::Flow - Store (restore) perl data structures in XML stream.

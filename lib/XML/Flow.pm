@@ -1,6 +1,6 @@
 package XML::Flow;
 
-#$Id: Flow.pm,v 1.2 2006/07/25 09:35:17 zag Exp $
+#$Id: Flow.pm,v 1.3 2006/07/26 07:20:46 zag Exp $
 
 =pod
 
@@ -47,7 +47,7 @@ use warnings;
 use Carp;
 use Encode;
 use strict;
-$XML::Flow::VERSION = '0.80';
+$XML::Flow::VERSION = '0.81';
 
 my $attrs = {
     _file        => undef,
@@ -276,7 +276,6 @@ sub _xml2hash_handler {
                 if ( $elem eq 'key' ) {
                     push @{$tag_stack}, $parent;
                     my $ref_val;
-                    print Dumper($current);
                     $current->{value} = undef
                       if ( exists $current->{attr}->{value}
                         and $current->{attr}->{value} eq 'undef' );
@@ -370,7 +369,8 @@ sub _handle_ev {
 
 Run XML parser. Argument is a reference to hash with tag => handler.
 If handler eq undef, then tag ignore. If subroutine return non undef result, it passed to parent
-tag handler. For example:
+tag handler. Handler called with args: ( {hash of attributes}, <reference to data> [,<reference to data>] ).
+For example:
 
 Source xml :
 
@@ -398,29 +398,17 @@ Read code:
  my %tags = (
     Root=>undef,
     Obj=>sub { print Dumper(\@_) },
-    Also=>sub { shift; return @_},
+    Also=>sub { 
+        shift; #reference to hash of attributes
+        return @_},
     );
  $rd->read(\%tags);
  $rd->close;
- $rd->close;
 
 Output:
- $VAR1 = {
-          'value' => '3',
-          'name' => 'key',
-          'attr' => {
-                      'name' => 'scalar'
-                    }
-        };
- $VAR1 = {
-          'name' => 'key',
-          'attr' => {
-                      'value' => 'undef',
-                      'name' => '1'
-                    }
-        };
+
  $VAR1 = [
-          {},
+          {}, #reference to hash of xml tag attributes
           \'3',
           {
             '1' => undef
