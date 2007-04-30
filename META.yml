@@ -1,8 +1,20 @@
---- #YAML:1.0
+---
 name: XML-Flow
-version: 0.81
+version: 0.82
 author:
   - Zahatski Aliaksandr zag@cpan.org
 abstract: Store (restore) perl data structures in XML stream.
 license: perl
-generated_by: Module::Build version 0.2611, without YAML.pm
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  XML::Parser: 0
+  XML::Writer: 0
+provides:
+  XML::Flow:
+    file: lib/XML/Flow.pm
+    version: 0.82
+generated_by: Module::Build version 0.2806
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
