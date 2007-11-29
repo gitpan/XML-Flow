@@ -5,6 +5,7 @@ WriteMakefile
           'NAME' => 'XML::Flow',
           'VERSION_FROM' => 'lib/XML/Flow.pm',
           'PREREQ_PM' => {
+                           'Encode' => '0',
                            'XML::Parser' => '0',
                            'XML::Writer' => '0'
                          },
