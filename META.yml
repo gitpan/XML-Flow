@@ -1,6 +1,6 @@
 ---
 name: XML-Flow
-version: 0.84
+version: 0.85
 author:
   - Zahatski Aliaksandr zag@cpan.org
 abstract: Store (restore) perl data structures in XML stream.
@@ -14,7 +14,7 @@ requires:
 provides:
   XML::Flow:
     file: lib/XML/Flow.pm
-    version: 0.84
+    version: 0.85
 generated_by: Module::Build version 0.2808
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

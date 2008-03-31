@@ -1,6 +1,6 @@
 package XML::Flow;
 
-#$Id: Flow.pm 237 2007-11-29 13:25:29Z zag $
+#$Id: Flow.pm 247 2008-03-16 13:41:26Z zag $
 
 =pod
 
@@ -56,7 +56,7 @@ use strict;
 require Exporter;
 *import               = \&Exporter::import;
 @XML::Flow::EXPORT_OK = qw(ref2xml xml2ref);
-$XML::Flow::VERSION   = '0.84';
+$XML::Flow::VERSION   = '0.85';
 my $attrs = {
     _file        => undef,
     _file_handle => undef,
@@ -239,8 +239,7 @@ sub _get_writer {
     my $self = shift;
     unless ( $self->_writer ) {
         my $fh = $self->_get_handle(1) || $self->_file;
-        my $writer = new XML::Writer::
-          OUTPUT      => $fh;
+        my $writer = new XML::Writer:: OUTPUT => $fh;
         $writer->xmlDecl("UTF-8");
         $self->_writer($writer)
 
@@ -487,6 +486,13 @@ sub _parse_stream {
         return unless my $handler = $tags->{ $current->{name} };
         print 'ERROR stack for ' . $elem . "->" . $current->{name}
           unless $current->{name} eq $elem;
+
+        #before call handler push to stack text values
+        my $text = delete $current->{text};
+
+        # not save format text
+        push @{ $current->{value} }, $text
+          if defined $text && $text !~ /^\s+$/s;
         my @res = (
             $handler->(
                 $current->{attr},
@@ -496,8 +502,17 @@ sub _parse_stream {
             )
         );
         if ( my $parent = pop @{$stream_stack} ) {
-            push @{ $parent->{value} }, @res
-              if scalar @res && not exists $parent->{fake};
+            if ( scalar @res && not exists $parent->{fake} ) {
+
+                # store braked chars streams to values
+                # <tag> text text <tag2>some</tag2> continued text</tag>
+                my $text = delete $parent->{text};
+
+                # not save format text
+                push @{ $parent->{value} }, $text
+                  if defined $text && $text !~ /^\s+$/s;
+                push @{ $parent->{value} }, @res;
+            }
             push @{$stream_stack}, $parent;
         }
     }
@@ -614,7 +629,7 @@ Zahatski Aliaksandr, <zag@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006-2007 by Zahatski Aliaksandr
+Copyright (C) 2006-2008 by Zahatski Aliaksandr
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.8 or,
