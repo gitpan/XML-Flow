@@ -1,6 +1,6 @@
 package XML::Flow;
 
-#$Id: Flow.pm 247 2008-03-16 13:41:26Z zag $
+#$Id: Flow.pm 833 2010-08-24 12:23:53Z zag $
 
 =pod
 
@@ -56,7 +56,7 @@ use strict;
 require Exporter;
 *import               = \&Exporter::import;
 @XML::Flow::EXPORT_OK = qw(ref2xml xml2ref);
-$XML::Flow::VERSION   = '0.85';
+$XML::Flow::VERSION   = '0.86';
 my $attrs = {
     _file        => undef,
     _file_handle => undef,
@@ -192,7 +192,7 @@ or
 or
 
  my $string_for_write_xml;
- my $wr = new XML::Flow:: \$string_for_write_xml;
+ my $wr = new XML::Flow:: \$string_buffer_for_write_xml;
 
 
 =cut
@@ -439,6 +439,7 @@ sub _parse_stream {
     my $self = shift;
     my ( $struct, $data, $elem, %attr ) = @_;
     my ( $state, $shared, $tags ) = @{$struct}{ 'state', 'shared', 'tags' };
+    my $have_default = exists( $tags->{'*'} );
     my $stream_stack = $shared->{stream_stack} || [];
     $shared->{stream_stack} = $stream_stack;
     if ( $state == 4 ) {
@@ -477,13 +478,24 @@ sub _parse_stream {
     if ( $state == 1 ) {
         push @{$stream_stack},
           exists( $tags->{$elem} )
+          || $have_default
           ? { name => $elem, attr => \%attr }
           : { fake => 1 };
     }
     if ( $state == 3 ) {
         my $current = pop @{$stream_stack};
-        return unless defined $tags->{$elem};
-        return unless my $handler = $tags->{ $current->{name} };
+        my $handler;    #handler for tag
+        my $default_handler_selected = 0;
+        unless ($have_default) {
+            return unless defined( $tags->{$elem} );
+            return unless $handler = $tags->{ $current->{name} };
+        }
+        else {
+            unless ( $handler = $tags->{ $current->{name} } ) {
+                $handler                  = $tags->{'*'};
+                $default_handler_selected = 1;
+            }
+        }
         print 'ERROR stack for ' . $elem . "->" . $current->{name}
           unless $current->{name} eq $elem;
 
@@ -495,7 +507,9 @@ sub _parse_stream {
           if defined $text && $text !~ /^\s+$/s;
         my @res = (
             $handler->(
-                $current->{attr},
+                $default_handler_selected
+                ? ( $current->{name} )
+                : ( ),  $current->{attr},
                 ref( $current->{value} )      ? @{ $current->{value} }
                 : defined( $current->{text} ) ? $current->{text}
                 : ()
@@ -629,7 +643,7 @@ Zahatski Aliaksandr, <zag@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006-2008 by Zahatski Aliaksandr
+Copyright (C) 2006-2010 by Zahatski Aliaksandr
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.8 or,
